@@ -30,6 +30,10 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         # REDIRIGIR MODELOS 3D - NUEVA REGLA
         if path.startswith('/Models/'):
             return os.path.join(os.getcwd(), 'TMChess3D', path[1:])
+        if path.startswith('/piece-showcase/'):
+            return os.path.join(os.getcwd(), 'TMChess3D', path[1:])
+        if path.startswith('/2d/'):
+            return os.path.join(os.getcwd(), 'TMChess3D', path[1:])
         return super().translate_path(path)
 
 def start_ngrok():

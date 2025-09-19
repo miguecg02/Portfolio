@@ -229,14 +229,7 @@
         </div>
     </div>
 
-    <!-- Cargar las bibliotecas necesarias -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="./TMChess3D/libs/three.module.js"></script>
-    <script src="./TMChess3D/libs/tween.module.js"></script>
-    <script src="./TMChess3D/libs/MTLLoader.js"></script>
-    <script src="./TMChess3D/libs/OBJLoader.js"></script>
-
-    <!-- Cargar los componentes del juego -->
+        <!-- Cargar los componentes del juego -->
     <script type="module">
         // Importar los componentes necesarios - RUTAS CORREGIDAS
         import { ChessGame } from './TMChess3D/our_libs/chess/game_handler.js';
@@ -244,6 +237,10 @@
         import * as Pieces from './TMChess3D/Objects/Pieces/AllPieces.js';
         import { AbstractPiece } from './TMChess3D/Objects/Pieces/AbstractPiece.js';
         import * as PiceMaterialSets from './TMChess3D/Objects/Pieces/Materials/MaterialSetLibrary.js';
+        import * as THREE from './TMChess3D/libs/three.module.js';
+        import * as TWEEN from './TMChess3D/libs/tween.module.js';
+        import { MTLLoader } from './TMChess3D/libs/MTLLoader.js';
+        import { OBJLoader } from './TMChess3D/libs/OBJLoader.js';
 
         // Hacer que estas variables estén disponibles globalmente para el resto del código
         window.ChessGame = ChessGame;
@@ -251,14 +248,18 @@
         window.Pieces = Pieces;
         window.AbstractPiece = AbstractPiece;
         window.PiceMaterialSets = PiceMaterialSets;
+        window.THREE = THREE;
+        window.TWEEN = TWEEN;
 
         // Cargar la escena principal - RUTA CORREGIDA
         import('./TMChess3D/Scene.js').then(() => {
+            console.log('Scene.js cargado correctamente');
             document.getElementById('loading').style.display = 'none';
         }).catch(error => {
             console.error('Error al cargar el juego:', error);
             document.getElementById('loading').style.display = 'none';
             document.getElementById('error').style.display = 'block';
+            document.getElementById('error').innerHTML += '<br>Error: ' + error.message;
         });
     </script>
 
@@ -299,6 +300,19 @@
 
             // El juego se carga a través del import module más arriba
         }
+
+        // Script de diagnóstico
+        setTimeout(() => {
+            const debugInfo = document.createElement('div');
+            debugInfo.style.cssText = 'position: fixed; top: 10px; right: 10px; background: rgba(0,0,0,0.8); color: white; padding: 10px; z-index: 1000; font-size: 12px;';
+            debugInfo.innerHTML = `
+                <div>WebGL: ${webglAvailable() ? '✅' : '❌'}</div>
+                <div>Canvas: ${document.getElementById('chessCanvas') ? '✅' : '❌'}</div>
+                <div>THREE: ${typeof THREE !== 'undefined' ? '✅' : '❌'}</div>
+                <div>TWEEN: ${typeof TWEEN !== 'undefined' ? '✅' : '❌'}</div>
+            `;
+            document.body.appendChild(debugInfo);
+        }, 3000);
     </script>
 </body>
 </html>
