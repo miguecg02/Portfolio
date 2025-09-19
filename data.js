@@ -97,11 +97,5 @@ const informacionPersonal = {
   tecnologias: [
     ["Html", 9],["Css", 8],["Javascript", 9],["Typescript", 8],["Angular", 9],
     ["Ionic",7],["Node",6],["Python",5],["C#",3]
-  ],
-  redes: [
-    ["github", "https://github.com/cacalo"],
-    ["linkedin", "https://www.linkedin.com/in/gonzalo-bechara-baladi-05b14353/"],
-    ["youtube", "https://www.youtube.com/@puntoJson"],
-    ["instagram", ""],
   ]
 };
