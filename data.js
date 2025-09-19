@@ -73,9 +73,9 @@ const proyectos = [
     titulo: "Ta-Te-Ti",
     descripcion:
       "Proyecto sencillo de un juego de Ta-te-ti, en donde vemos lo básico de algoritmos y generamos uno para detectar si algún jugador ganó la partida.",
-    link: "https://cacalo.github.io/Ta-Te-Ti/",
+    link: "https://miguecg02.github.io/Ta-te-ti/",
     fecha: "08/02/2023",
-    imagen: "tateti.png",
+    imagen: "9.png",
     tecnologias: ["HTML", "CSS", "Javascript"],
   }
 ];
