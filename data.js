@@ -2,7 +2,7 @@ const proyectos = [
    {
   titulo: "Ajedrez 3D con Three.js - TMChess3D",
   descripcion: "Implementación interactiva de un juego de ajedrez en 3D utilizando Three.js, con movimientos válidos, animaciones, rotación de cámara y selección de piezas.",
-  link: "https://0af5684b6951.ngrok-free.app/chess.html",
+  link: "https://a68daff51e10.ngrok-free.app/chess.html",
   fecha: "01/12/2023",
   imagen: "3.png",
   tecnologias: ["Three.js", "JavaScript", "WebGL", "HTML5", "CSS3", "3D Modeling", "Animación 3D"]

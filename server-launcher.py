@@ -27,6 +27,9 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             return os.path.join(os.getcwd(), 'TMChess3D', path[1:])
         if path.startswith('/our_libs/'):
             return os.path.join(os.getcwd(), 'TMChess3D', path[1:])
+        # REDIRIGIR MODELOS 3D - NUEVA REGLA
+        if path.startswith('/Models/'):
+            return os.path.join(os.getcwd(), 'TMChess3D', path[1:])
         return super().translate_path(path)
 
 def start_ngrok():
