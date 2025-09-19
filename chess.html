@@ -6,6 +6,7 @@
     <title>TMChess3D - Ajedrez 3D</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>♟️</text></svg>">
     <style>
+        /* Estilos anteriores se mantienen igual */
         * {
             margin: 0;
             padding: 0;
@@ -308,18 +309,19 @@
         // Función para cargar módulos con reintentos
         async function loadModule(modulePath, moduleName, maxRetries = 3) {
             updateLoadingText(`Cargando ${moduleName}...`);
+            console.log(`Intentando cargar: ${modulePath}`);
 
             for (let i = 0; i < maxRetries; i++) {
                 try {
                     const module = await import(modulePath);
-                    console.log(`${moduleName} cargado correctamente`);
+                    console.log(`${moduleName} cargado correctamente desde ${modulePath}`);
                     return module;
                 } catch (error) {
-                    console.warn(`Intento ${i+1} fallido para ${moduleName}:`, error);
-                    updateLoadingText(`Intento ${i+1} fallido para ${moduleName}`);
+                    console.error(`Intento ${i+1} fallido para ${moduleName} en ${modulePath}:`, error);
+                    updateLoadingText(`Intento ${i+1} fallido para ${moduleName}: ${error.message}`);
 
                     if (i === maxRetries - 1) {
-                        throw new Error(`No se pudo cargar ${moduleName}: ${error.message}`);
+                        throw new Error(`No se pudo cargar ${moduleName} desde ${modulePath}: ${error.message}`);
                     }
 
                     // Esperar antes de reintentar
@@ -339,13 +341,25 @@
             }
         }
 
+        // Función para probar la disponibilidad de un archivo
+        async function testFileAvailability(filePath) {
+            try {
+                const response = await fetch(filePath, { method: 'HEAD' });
+                return response.ok;
+            } catch (error) {
+                console.error(`Error al verificar ${filePath}:`, error);
+                return false;
+            }
+        }
+
         // Intentar cargar los módulos principales
         async function loadChessGame() {
             try {
                 // Primero cargar Three.js y TWEEN.js
                 updateLoadingText("Cargando THREE.js...");
                 try {
-                    window.THREE = await import('./TMChess3D/libs/three.module.js');
+                    const threeModule = await import('./TMChess3D/libs/three.module.js');
+                    window.THREE = threeModule;
                     loadStatus.three = true;
                     console.log('THREE.js cargado correctamente');
                 } catch (error) {
@@ -355,7 +369,8 @@
 
                 updateLoadingText("Cargando TWEEN.js...");
                 try {
-                    window.TWEEN = await import('./TMChess3D/libs/tween.module.js');
+                    const tweenModule = await import('./TMChess3D/libs/tween.module.js');
+                    window.TWEEN = tweenModule;
                     loadStatus.tween = true;
                     console.log('TWEEN.js cargado correctamente');
                 } catch (error) {
@@ -363,10 +378,51 @@
                     throw new Error('Tween.js no se pudo cargar: ' + error.message);
                 }
 
-                // Cargar los demás módulos
+                // Verificar disponibilidad de archivos antes de intentar cargarlos
+                updateLoadingText("Verificando disponibilidad de archivos...");
+                
+                const filesToCheck = [
+                    './TMChess3D/our_libs/chess/game_handler.js',
+                    './TMChess3D/Objects/Board.js',
+                    './TMChess3D/Objects/Pieces/AbstractPiece.js',
+                    './TMChess3D/Objects/Pieces/AllPieces.js',
+                    './TMChess3D/Objects/Pieces/Materials/MaterialSetLibrary.js',
+                    './TMChess3D/Scene.js'
+                ];
+
+                for (const file of filesToCheck) {
+                    const isAvailable = await testFileAvailability(file);
+                    console.log(`${file} ${isAvailable ? 'disponible' : 'NO disponible'}`);
+                    if (!isAvailable) {
+                        throw new Error(`Archivo no encontrado: ${file}`);
+                    }
+                }
+
+                // Cargar los demás módulos en el orden correcto
+                updateLoadingText("Cargando AbstractPiece...");
+                try {
+                    const abstractPieceModule = await loadModule('./TMChess3D/Objects/Pieces/AbstractPiece.js', 'AbstractPiece');
+                    window.AbstractPiece = abstractPieceModule.AbstractPiece;
+                    loadStatus.abstractPiece = true;
+                } catch (error) {
+                    console.error('Error al cargar AbstractPiece:', error);
+                    throw new Error('AbstractPiece no se pudo cargar: ' + error.message);
+                }
+
+                updateLoadingText("Cargando Pieces...");
+                try {
+                    const piecesModule = await loadModule('./TMChess3D/Objects/Pieces/AllPieces.js', 'Pieces');
+                    window.Pieces = piecesModule;
+                    loadStatus.pieces = true;
+                } catch (error) {
+                    console.error('Error al cargar Pieces:', error);
+                    throw new Error('Pieces no se pudo cargar: ' + error.message);
+                }
+
                 updateLoadingText("Cargando ChessGame...");
                 try {
-                    window.ChessGame = (await loadModule('./TMChess3D/our_libs/chess/game_handler.js', 'ChessGame')).ChessGame;
+                    const chessGameModule = await loadModule('./TMChess3D/our_libs/chess/game_handler.js', 'ChessGame');
+                    window.ChessGame = chessGameModule.ChessGame;
                     loadStatus.chessGame = true;
                 } catch (error) {
                     console.error('Error al cargar ChessGame:', error);
@@ -375,34 +431,18 @@
 
                 updateLoadingText("Cargando Board...");
                 try {
-                    window.Board = (await loadModule('./TMChess3D/Objects/Board.js', 'Board')).Board;
+                    const boardModule = await loadModule('./TMChess3D/Objects/Board.js', 'Board');
+                    window.Board = boardModule.Board;
                     loadStatus.board = true;
                 } catch (error) {
                     console.error('Error al cargar Board:', error);
                     throw new Error('Board no se pudo cargar: ' + error.message);
                 }
 
-                updateLoadingText("Cargando Pieces...");
-                try {
-                    window.Pieces = await loadModule('./TMChess3D/Objects/Pieces/AllPieces.js', 'Pieces');
-                    loadStatus.pieces = true;
-                } catch (error) {
-                    console.error('Error al cargar Pieces:', error);
-                    throw new Error('Pieces no se pudo cargar: ' + error.message);
-                }
-
-                updateLoadingText("Cargando AbstractPiece...");
-                try {
-                    window.AbstractPiece = (await loadModule('./TMChess3D/Objects/Pieces/AbstractPiece.js', 'AbstractPiece')).AbstractPiece;
-                    loadStatus.abstractPiece = true;
-                } catch (error) {
-                    console.error('Error al cargar AbstractPiece:', error);
-                    throw new Error('AbstractPiece no se pudo cargar: ' + error.message);
-                }
-
                 updateLoadingText("Cargando MaterialSets...");
                 try {
-                    window.PiceMaterialSets = await loadModule('./TMChess3D/Objects/Pieces/Materials/MaterialSetLibrary.js', 'MaterialSets');
+                    const materialSetsModule = await loadModule('./TMChess3D/Objects/Pieces/Materials/MaterialSetLibrary.js', 'MaterialSets');
+                    window.PiceMaterialSets = materialSetsModule;
                     loadStatus.materialSets = true;
                 } catch (error) {
                     console.error('Error al cargar MaterialSets:', error);
@@ -412,14 +452,16 @@
                 // Intentar cargar loaders opcionales
                 try {
                     updateLoadingText("Cargando MTLLoader...");
-                    window.MTLLoader = (await loadModule('./TMChess3D/libs/MTLLoader.js', 'MTLLoader')).MTLLoader;
+                    const mtlLoaderModule = await loadModule('./TMChess3D/libs/MTLLoader.js', 'MTLLoader');
+                    window.MTLLoader = mtlLoaderModule.MTLLoader;
                 } catch (e) {
                     console.warn("MTLLoader opcional no disponible:", e);
                 }
 
                 try {
                     updateLoadingText("Cargando OBJLoader...");
-                    window.OBJLoader = (await loadModule('./TMChess3D/libs/OBJLoader.js', 'OBJLoader')).OBJLoader;
+                    const objLoaderModule = await loadModule('./TMChess3D/libs/OBJLoader.js', 'OBJLoader');
+                    window.OBJLoader = objLoaderModule.OBJLoader;
                 } catch (e) {
                     console.warn("OBJLoader opcional no disponible:", e);
                 }
@@ -427,11 +469,11 @@
                 // Finalmente cargar la escena principal
                 updateLoadingText("Cargando Scene...");
                 try {
-                    const SceneModule = await loadModule('./TMChess3D/Scene.js', 'Scene');
+                    const sceneModule = await loadModule('./TMChess3D/Scene.js', 'Scene');
                     loadStatus.scene = true;
 
                     // Inicializar la escena después de cargar todo
-                    initializeScene(SceneModule);
+                    initializeScene(sceneModule);
                 } catch (error) {
                     console.error('Error al cargar Scene:', error);
                     throw new Error('Scene no se pudo cargar: ' + error.message);
