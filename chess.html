@@ -206,7 +206,7 @@
             .game-container {
                 height: 50vh;
             }
-            
+
             .debug-panel {
                 top: 50px;
                 right: 10px;
@@ -284,7 +284,7 @@
         function updateDebugInfo() {
             const debugInfo = document.getElementById('debug-info');
             if (!debugInfo) return;
-            
+
             debugInfo.innerHTML = `
                 <div>WebGL: ${webglAvailable() ? '✅' : '❌'}</div>
                 <div>Canvas: ${document.getElementById('chessCanvas') ? '✅' : '❌'}</div>
@@ -309,42 +309,23 @@
             updateDebugInfo();
         }
 
-        // Función para cargar módulos con timeout
-        function loadModuleWithTimeout(modulePath, moduleName, timeout = 10000) {
-            return new Promise((resolve, reject) => {
-                const timer = setTimeout(() => {
-                    reject(new Error(`Timeout al cargar ${moduleName} después de ${timeout/1000} segundos`));
-                }, timeout);
-
-                import(modulePath)
-                    .then(module => {
-                        clearTimeout(timer);
-                        resolve(module);
-                    })
-                    .catch(error => {
-                        clearTimeout(timer);
-                        reject(error);
-                    });
-            });
-        }
-
         // Función para cargar módulos con reintentos
-        async function loadModule(modulePath, moduleName, maxRetries = 3, timeout = 10000) {
+        async function loadModule(modulePath, moduleName, maxRetries = 3) {
             updateLoadingText(`Cargando ${moduleName}...`);
-            
+
             for (let i = 0; i < maxRetries; i++) {
                 try {
-                    const module = await loadModuleWithTimeout(modulePath, moduleName, timeout);
+                    const module = await import(modulePath);
                     console.log(`${moduleName} cargado correctamente`);
                     return module;
                 } catch (error) {
                     console.warn(`Intento ${i+1} fallido para ${moduleName}:`, error);
-                    updateLoadingText(`Intento ${i+1} fallido para ${moduleName}: ${error.message}`);
-                    
+                    updateLoadingText(`Intento ${i+1} fallido para ${moduleName}`);
+
                     if (i === maxRetries - 1) {
                         throw new Error(`No se pudo cargar ${moduleName}: ${error.message}`);
                     }
-                    
+
                     // Esperar antes de reintentar
                     await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
                 }
@@ -371,45 +352,45 @@
 
                 // Cargar los demás módulos
                 updateLoadingText("Cargando ChessGame...");
-                window.ChessGame = (await loadModule('./TMChess3D/our_libs/chess/game_handler.js', 'ChessGame', 3, 15000)).ChessGame;
+                window.ChessGame = (await loadModule('./TMChess3D/our_libs/chess/game_handler.js', 'ChessGame')).ChessGame;
                 loadStatus.chessGame = true;
 
                 updateLoadingText("Cargando Board...");
-                window.Board = (await loadModule('./TMChess3D/Objects/Board.js', 'Board', 3, 15000)).Board;
+                window.Board = (await loadModule('./TMChess3D/Objects/Board.js', 'Board')).Board;
                 loadStatus.board = true;
 
                 updateLoadingText("Cargando Pieces...");
-                window.Pieces = await loadModule('./TMChess3D/Objects/Pieces/AllPieces.js', 'Pieces', 3, 15000);
+                window.Pieces = await loadModule('./TMChess3D/Objects/Pieces/AllPieces.js', 'Pieces');
                 loadStatus.pieces = true;
 
                 updateLoadingText("Cargando AbstractPiece...");
-                window.AbstractPiece = (await loadModule('./TMChess3D/Objects/Pieces/AbstractPiece.js', 'AbstractPiece', 3, 15000)).AbstractPiece;
+                window.AbstractPiece = (await loadModule('./TMChess3D/Objects/Pieces/AbstractPiece.js', 'AbstractPiece')).AbstractPiece;
                 loadStatus.abstractPiece = true;
 
                 updateLoadingText("Cargando MaterialSets...");
-                window.PiceMaterialSets = await loadModule('./TMChess3D/Objects/Pieces/Materials/MaterialSetLibrary.js', 'MaterialSets', 3, 15000);
+                window.PiceMaterialSets = await loadModule('./TMChess3D/Objects/Pieces/Materials/MaterialSetLibrary.js', 'MaterialSets');
                 loadStatus.materialSets = true;
 
                 // Intentar cargar loaders opcionales
                 try {
                     updateLoadingText("Cargando MTLLoader...");
-                    window.MTLLoader = (await loadModule('./TMChess3D/libs/MTLLoader.js', 'MTLLoader', 2, 10000)).MTLLoader;
+                    window.MTLLoader = (await loadModule('./TMChess3D/libs/MTLLoader.js', 'MTLLoader')).MTLLoader;
                 } catch (e) {
                     console.warn("MTLLoader opcional no disponible:", e);
                 }
 
                 try {
                     updateLoadingText("Cargando OBJLoader...");
-                    window.OBJLoader = (await loadModule('./TMChess3D/libs/OBJLoader.js', 'OBJLoader', 2, 10000)).OBJLoader;
+                    window.OBJLoader = (await loadModule('./TMChess3D/libs/OBJLoader.js', 'OBJLoader')).OBJLoader;
                 } catch (e) {
                     console.warn("OBJLoader opcional no disponible:", e);
                 }
 
                 // Finalmente cargar la escena principal
                 updateLoadingText("Cargando Scene...");
-                const SceneModule = await loadModule('./TMChess3D/Scene.js', 'Scene', 3, 20000);
+                const SceneModule = await loadModule('./TMChess3D/Scene.js', 'Scene');
                 loadStatus.scene = true;
-                
+
                 // Inicializar la escena después de cargar todo
                 initializeScene(SceneModule);
 
@@ -420,7 +401,7 @@
                 console.error('Error crítico al cargar el juego:', error);
                 document.getElementById('loading').style.display = 'none';
                 document.getElementById('error').style.display = 'block';
-                
+
                 const errorDetails = document.getElementById('error-details');
                 if (errorDetails) {
                     errorDetails.innerHTML = `
@@ -437,19 +418,19 @@
         function initializeScene(SceneModule) {
             try {
                 updateLoadingText("Inicializando escena...");
-                
+
                 // Crear la escena usando el canvas existente
                 const scene = new SceneModule.MyScene("#chessCanvas");
-                
+
                 // Configurar event listeners
                 window.addEventListener("resize", () => scene.onWindowResize());
                 window.addEventListener("click", () => scene.onClick());
                 window.addEventListener("mousemove", (event) => scene.onMouseMove(event));
                 window.addEventListener("keydown", (event) => scene.onKeyDown(event));
-                
+
                 // Iniciar el bucle de renderizado
                 scene.update();
-                
+
                 console.log('Escena inicializada correctamente');
                 updateLoadingText("Escena inicializada correctamente");
 
@@ -514,7 +495,7 @@
                     '<p>Por favor, actualiza tu navegador o usa uno más moderno como Chrome, Firefox o Edge.</p>';
                 return;
             }
-            
+
             // Mostrar panel de debug después de 3 segundos si hay problemas
             setTimeout(() => {
                 if (!loadStatus.three || !loadStatus.tween) {
@@ -525,4 +506,6 @@
         }
     </script>
 </body>
+</html>
+
 </html>
