@@ -7,8 +7,8 @@
     <script type="importmap">
     {
         "imports": {
-            "three": "./libs/three.module.js",
-            "tween": "./libs/tween.module.js"
+            "three": "./TMChess3D/libs/three.module.js",
+            "tween": "./TMChess3D/libs/tween.module.js"
         }
     }
     </script>
@@ -231,19 +231,19 @@
 
     <!-- Cargar las bibliotecas necesarias -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="./libs/three.module.js"></script>
-    <script src="./libs/tween.module.js"></script>
-    <script src="./libs/MTLLoader.js"></script>
-    <script src="./libs/OBJLoader.js"></script>
+    <script src="./TMChess3D/libs/three.module.js"></script>
+    <script src="./TMChess3D/libs/tween.module.js"></script>
+    <script src="./TMChess3D/libs/MTLLoader.js"></script>
+    <script src="./TMChess3D/libs/OBJLoader.js"></script>
 
     <!-- Cargar los componentes del juego -->
     <script type="module">
-        // Importar los componentes necesarios
-        import { ChessGame } from './our_libs/chess/game_handler.js';
-        import { Board } from './Objects/Board.js';
-        import * as Pieces from './Objects/Pieces/AllPieces.js';
-        import { AbstractPiece } from './Objects/Pieces/AbstractPiece.js';
-        import * as PiceMaterialSets from './Objects/Pieces/Materials/MaterialSetLibrary.js';
+        // Importar los componentes necesarios - RUTAS CORREGIDAS
+        import { ChessGame } from './TMChess3D/our_libs/chess/game_handler.js';
+        import { Board } from './TMChess3D/Objects/Board.js';
+        import * as Pieces from './TMChess3D/Objects/Pieces/AllPieces.js';
+        import { AbstractPiece } from './TMChess3D/Objects/Pieces/AbstractPiece.js';
+        import * as PiceMaterialSets from './TMChess3D/Objects/Pieces/Materials/MaterialSetLibrary.js';
 
         // Hacer que estas variables estén disponibles globalmente para el resto del código
         window.ChessGame = ChessGame;
@@ -252,8 +252,8 @@
         window.AbstractPiece = AbstractPiece;
         window.PiceMaterialSets = PiceMaterialSets;
 
-        // Cargar la escena principal
-        import('./Scene.js').then(() => {
+        // Cargar la escena principal - RUTA CORREGIDA
+        import('./TMChess3D/Scene.js').then(() => {
             document.getElementById('loading').style.display = 'none';
         }).catch(error => {
             console.error('Error al cargar el juego:', error);
