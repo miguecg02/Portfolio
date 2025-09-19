@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TMChess3D - Ajedrez 3D</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a3d7c 0%, #2a5ca0 50%, #3fb8af 100%);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 25px;
+        }
+
+        .back-button {
+            display: inline-flex;
+            align-items: center;
+            padding: 12px 24px;
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white;
+            text-decoration: none;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            align-self: flex-start;
+        }
+
+        .back-button:hover {
+            background-color: white;
+            color: #1a3d7c;
+            transform: translateY(-2px);
+        }
+
+        .header {
+            margin-bottom: 10px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            margin-bottom: 30px;
+        }
+
+        .game-container {
+            width: 100%;
+            height: 70vh;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            margin: 20px 0;
+            position: relative;
+        }
+
+        #chessFrame {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: #000;
+        }
+
+        .instructions {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 25px;
+            border-radius: 12px;
+            width: 100%;
+            text-align: left;
+            margin: 20px 0;
+        }
+
+        .instructions h3 {
+            margin-bottom: 15px;
+            font-size: 1.4rem;
+            text-align: center;
+        }
+
+        .instructions ul {
+            list-style-type: none;
+        }
+
+        .instructions li {
+            margin-bottom: 10px;
+            padding-left: 25px;
+            position: relative;
+        }
+
+        .instructions li:before {
+            content: "•";
+            color: #3fb8af;
+            font-weight: bold;
+            position: absolute;
+            left: 0;
+        }
+
+        .loading {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 10;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 5px solid #3fb8af;
+            animation: spin 1s linear infinite;
+            margin-bottom: 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            color: #ff6b6b;
+            text-align: center;
+            padding: 20px;
+            display: none;
+        }
+
+        .retry-button {
+            margin-top: 15px;
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .retry-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .alternative-link {
+            margin-top: 15px;
+        }
+
+        .alternative-link a {
+            color: #3fb8af;
+            text-decoration: underline;
+        }
+
+        .server-check {
+            margin-top: 10px;
+            font-size: 0.9rem;
+            color: #ccc;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-online {
+            background-color: #4caf50;
+        }
+
+        .status-offline {
+            background-color: #f44336;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+
+            .subtitle {
+                font-size: 1rem;
+            }
+
+            .game-container {
+                height: 50vh;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="index.html" class="back-button">← Volver al Portfolio</a>
+
+        <div class="header">
+            <h1>TMChess3D - Ajedrez en 3D</h1>
+            <p class="subtitle">Una experiencia de ajedrez inmersiva con gráficos 3D</p>
+        </div>
+
+        <div class="game-container">
+            <div id="loading" class="loading">
+                <div class="spinner"></div>
+                <div id="loading-text">Cargando ajedrez 3D...</div>
+                <div id="server-status" class="server-check">
+                    <span id="status-indicator" class="status-indicator status-offline"></span>
+                    <span id="status-text">Comprobando servidor...</span>
+                </div>
+            </div>
+            <iframe id="chessFrame" src="about:blank" title="Ajedrez 3D" style="display: none;"></iframe>
+            <div id="error" class="error-message">
+                <p>No se pudo cargar el juego. Esto puede deberse a:</p>
+                <ul>
+                    <li>El servidor local no está ejecutándose</li>
+                    <li>Políticas de seguridad del navegador</li>
+                    <li>Problemas de conexión con el servidor</li>
+                </ul>
+                <p>Por favor, asegúrate de que el servidor esté ejecutándose en el puerto 8000.</p>
+                <div class="alternative-link">
+                    <a href="http://localhost:8000/TMChess3D/" target="_blank">Abrir Ajedrez 3D en nueva pestaña</a>
+                </div>
+                <button class="retry-button" onclick="retryLoad()">Reintentar</button>
+            </div>
+        </div>
+
+        <div class="instructions">
+            <h3>Instrucciones:</h3>
+            <ul>
+                <li>Haz clic en una pieza para seleccionarla</li>
+                <li>La torre y el peón tienen animaciones al capturar</li>
+                <li>Las casillas verdes indican movimientos válidos</li>
+                <li>Usa la rueda del mouse para acercar/alejar</li>
+                <li>Haz clic y arrastra para rotar la cámara</li>
+                <li>Presiona 'C' para cambiar la vista de la cámara</li>
+                <li>Presiona 'S' para reiniciar el juego</li>
+                <li>Disfruta de la experiencia 3D inmersiva</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        const chessFrame = document.getElementById('chessFrame');
+        const loading = document.getElementById('loading');
+        const loadingText = document.getElementById('loading-text');
+        const errorDiv = document.getElementById('error');
+        const statusIndicator = document.getElementById('status-indicator');
+        const statusText = document.getElementById('status-text');
+        
+        let retryCount = 0;
+        const maxRetries = 3;
+        let loadTimeout;
+
+        // Verificar si el servidor está disponible
+        async function checkServerStatus() {
+            try {
+                const response = await fetch('http://localhost:8000', { 
+                    method: 'HEAD',
+                    cache: 'no-store'
+                });
+                return response.ok;
+            } catch (error) {
+                console.error("Error al verificar servidor:", error);
+                return false;
+            }
+        }
+
+        // Actualizar indicador de estado del servidor
+        function updateServerStatus(isOnline) {
+            if (isOnline) {
+                statusIndicator.className = 'status-indicator status-online';
+                statusText.textContent = 'Servidor local detectado';
+            } else {
+                statusIndicator.className = 'status-indicator status-offline';
+                statusText.textContent = 'Servidor local no disponible';
+            }
+        }
+
+        // Cargar el juego
+        async function loadGame() {
+            loading.style.display = 'flex';
+            errorDiv.style.display = 'none';
+            chessFrame.style.display = 'none';
+            
+            // Verificar estado del servidor primero
+            const isServerOnline = await checkServerStatus();
+            updateServerStatus(isServerOnline);
+            
+            if (!isServerOnline && retryCount < maxRetries) {
+                loadingText.textContent = `Servidor no disponible. Reintentando... (${retryCount + 1}/${maxRetries})`;
+                retryCount++;
+                setTimeout(loadGame, 2000);
+                return;
+            }
+            
+            if (!isServerOnline) {
+                showError();
+                return;
+            }
+            
+            // Si el servidor está online, cargar el juego
+            loadingText.textContent = "Cargando ajedrez 3D...";
+            chessFrame.src = 'http://localhost:8000/TMChess3D/?' + new Date().getTime();
+            
+            // Establecer timeout para la carga
+            clearTimeout(loadTimeout);
+            loadTimeout = setTimeout(() => {
+                if (loading.style.display !== 'none') {
+                    console.log("Tiempo de carga excedido, mostrando error...");
+                    showError();
+                }
+            }, 15000);
+        }
+
+        function showError() {
+            loading.style.display = 'none';
+            chessFrame.style.display = 'none';
+            errorDiv.style.display = 'block';
+            console.error("Error al cargar el ajedrez");
+        }
+
+        function retryLoad() {
+            retryCount = 0;
+            loadGame();
+        }
+
+        // Event listeners para el iframe
+        chessFrame.onload = function() {
+            clearTimeout(loadTimeout);
+            loading.style.display = 'none';
+            chessFrame.style.display = 'block';
+            errorDiv.style.display = 'none';
+            console.log("Ajedrez cargado correctamente");
+            
+            // Inyectar código para mejorar las animaciones
+            setTimeout(() => {
+                try {
+                    const iframeDoc = chessFrame.contentDocument || chessFrame.contentWindow.document;
+                    // Este código se ejecutaría dentro del iframe para optimizar animaciones
+                    console.log("Iframe cargado, optimizando animaciones...");
+                } catch (e) {
+                    console.log("No se puede acceder al contenido del iframe por políticas de seguridad");
+                }
+            }, 1000);
+        };
+
+        chessFrame.onerror = function() {
+            clearTimeout(loadTimeout);
+            showError();
+        };
+
+        // Iniciar carga cuando la página esté lista
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', loadGame);
+        } else {
+            loadGame();
+        }
+    </script>
+</body>
+</html>
