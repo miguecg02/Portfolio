@@ -55,9 +55,9 @@ const proyectos = [
     titulo: "Ruelta personalizable",
     descripcion:
       "Herramienta para generar un sorteo entre opciones y visualizarlo como si fuese una ruleta. Para practicar eventos y para demostrar el uso que puede tener la matemática en un proyecto.",
-    link: "https://cacalo.github.io/Ruleta-cusomizable/",
+    link: "https://miguecg02.github.io/Ruleta/",
     fecha: "08/02/2023",
-    imagen: "ruleta.png",
+    imagen: "9.png",
     tecnologias: ["HTML", "CSS", "Javascript"],
   },
   {

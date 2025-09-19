@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TMChess3D - Ajedrez 3D</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>♟️</text></svg>">
     <style>
         * {
             margin: 0;
@@ -166,6 +167,33 @@
             background: rgba(255, 255, 255, 0.3);
         }
 
+        .debug-panel {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 10px;
+            z-index: 1000;
+            font-size: 12px;
+            border-radius: 5px;
+            max-width: 300px;
+            display: none;
+        }
+
+        .debug-toggle {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 5px 10px;
+            cursor: pointer;
+            z-index: 1001;
+        }
+
         @media (max-width: 768px) {
             h1 {
                 font-size: 2rem;
@@ -177,6 +205,12 @@
 
             .game-container {
                 height: 50vh;
+            }
+
+            .debug-panel {
+                top: 50px;
+                right: 10px;
+                max-width: 200px;
             }
         }
     </style>
@@ -194,6 +228,7 @@
             <div id="loading" class="loading">
                 <div class="spinner"></div>
                 <div id="loading-text">Cargando ajedrez 3D...</div>
+                <div id="loading-details" style="margin-top: 10px; font-size: 12px;"></div>
             </div>
             <canvas id="chessCanvas"></canvas>
             <div id="error" class="error-message">
@@ -202,6 +237,7 @@
                     <li>Tu navegador no soporta WebGL</li>
                     <li>Problemas al cargar los recursos del juego</li>
                 </ul>
+                <div id="error-details" style="margin-top: 15px; text-align: left; font-size: 14px;"></div>
                 <button class="retry-button" onclick="retryLoad()">Reintentar</button>
             </div>
         </div>
@@ -221,20 +257,76 @@
         </div>
     </div>
 
+    <button class="debug-toggle" onclick="toggleDebug()">Debug</button>
+    <div class="debug-panel" id="debug-panel">
+        <h4>Estado de carga:</h4>
+        <div id="debug-info"></div>
+    </div>
+
     <!-- Cargar Three.js y TWEEN directamente -->
     <script src="./TMChess3D/libs/three.module.js"></script>
     <script src="./TMChess3D/libs/tween.module.js"></script>
 
     <script type="module">
+        // Estado de carga de recursos
+        const loadStatus = {
+            three: false,
+            tween: false,
+            chessGame: false,
+            board: false,
+            pieces: false,
+            abstractPiece: false,
+            materialSets: false,
+            scene: false
+        };
+
+        // Función para actualizar el panel de debug
+        function updateDebugInfo() {
+            const debugInfo = document.getElementById('debug-info');
+            if (!debugInfo) return;
+
+            debugInfo.innerHTML = `
+                <div>WebGL: ${webglAvailable() ? '✅' : '❌'}</div>
+                <div>Canvas: ${document.getElementById('chessCanvas') ? '✅' : '❌'}</div>
+                <div>THREE: ${loadStatus.three ? '✅' : '❌'}</div>
+                <div>TWEEN: ${loadStatus.tween ? '✅' : '❌'}</div>
+                <div>ChessGame: ${loadStatus.chessGame ? '✅' : '❌'}</div>
+                <div>Board: ${loadStatus.board ? '✅' : '❌'}</div>
+                <div>Pieces: ${loadStatus.pieces ? '✅' : '❌'}</div>
+                <div>AbstractPiece: ${loadStatus.abstractPiece ? '✅' : '❌'}</div>
+                <div>MaterialSets: ${loadStatus.materialSets ? '✅' : '❌'}</div>
+                <div>Scene: ${loadStatus.scene ? '✅' : '❌'}</div>
+            `;
+        }
+
+        // Función para actualizar el estado de carga
+        function updateLoadingText(text) {
+            const loadingDetails = document.getElementById('loading-details');
+            if (loadingDetails) {
+                loadingDetails.textContent = text;
+            }
+            console.log(text);
+            updateDebugInfo();
+        }
+
         // Función para cargar módulos con reintentos
-        async function loadModule(modulePath, maxRetries = 3) {
+        async function loadModule(modulePath, moduleName, maxRetries = 3) {
+            updateLoadingText(`Cargando ${moduleName}...`);
+
             for (let i = 0; i < maxRetries; i++) {
                 try {
                     const module = await import(modulePath);
+                    console.log(`${moduleName} cargado correctamente`);
                     return module;
                 } catch (error) {
-                    console.warn(`Intento ${i+1} fallido para ${modulePath}:`, error);
-                    if (i === maxRetries - 1) throw error;
+                    console.warn(`Intento ${i+1} fallido para ${moduleName}:`, error);
+                    updateLoadingText(`Intento ${i+1} fallido para ${moduleName}`);
+
+                    if (i === maxRetries - 1) {
+                        throw new Error(`No se pudo cargar ${moduleName}: ${error.message}`);
+                    }
+
+                    // Esperar antes de reintentar
                     await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
                 }
             }
@@ -244,30 +336,60 @@
         async function loadChessGame() {
             try {
                 // Verificar que THREE y TWEEN estén disponibles
-                console.log('THREE disponible:', typeof THREE !== 'undefined');
-                console.log('TWEEN disponible:', typeof TWEEN !== 'undefined');
-
-                if (typeof THREE === 'undefined' || typeof TWEEN === 'undefined') {
-                    throw new Error('Three.js o Tween.js no se cargaron correctamente');
+                updateLoadingText("Verificando THREE.js...");
+                loadStatus.three = typeof THREE !== 'undefined';
+                if (!loadStatus.three) {
+                    throw new Error('Three.js no se cargó correctamente');
                 }
 
+                updateLoadingText("Verificando TWEEN...");
+                loadStatus.tween = typeof TWEEN !== 'undefined';
+                if (!loadStatus.tween) {
+                    throw new Error('Tween.js no se cargó correctamente');
+                }
+
+                console.log('THREE y TWEEN disponibles');
+
                 // Cargar los demás módulos
-                window.ChessGame = (await loadModule('./TMChess3D/our_libs/chess/game_handler.js')).ChessGame;
-                window.Board = (await loadModule('./TMChess3D/Objects/Board.js')).Board;
-                window.Pieces = await loadModule('./TMChess3D/Objects/Pieces/AllPieces.js');
-                window.AbstractPiece = (await loadModule('./TMChess3D/Objects/Pieces/AbstractPiece.js')).AbstractPiece;
-                window.PiceMaterialSets = await loadModule('./TMChess3D/Objects/Pieces/Materials/MaterialSetLibrary.js');
+                updateLoadingText("Cargando ChessGame...");
+                window.ChessGame = (await loadModule('./TMChess3D/our_libs/chess/game_handler.js', 'ChessGame')).ChessGame;
+                loadStatus.chessGame = true;
+
+                updateLoadingText("Cargando Board...");
+                window.Board = (await loadModule('./TMChess3D/Objects/Board.js', 'Board')).Board;
+                loadStatus.board = true;
+
+                updateLoadingText("Cargando Pieces...");
+                window.Pieces = await loadModule('./TMChess3D/Objects/Pieces/AllPieces.js', 'Pieces');
+                loadStatus.pieces = true;
+
+                updateLoadingText("Cargando AbstractPiece...");
+                window.AbstractPiece = (await loadModule('./TMChess3D/Objects/Pieces/AbstractPiece.js', 'AbstractPiece')).AbstractPiece;
+                loadStatus.abstractPiece = true;
+
+                updateLoadingText("Cargando MaterialSets...");
+                window.PiceMaterialSets = await loadModule('./TMChess3D/Objects/Pieces/Materials/MaterialSetLibrary.js', 'MaterialSets');
+                loadStatus.materialSets = true;
 
                 // Intentar cargar loaders opcionales
                 try {
-                    window.MTLLoader = (await loadModule('./TMChess3D/libs/MTLLoader.js')).MTLLoader;
-                    window.OBJLoader = (await loadModule('./TMChess3D/libs/OBJLoader.js')).OBJLoader;
+                    updateLoadingText("Cargando MTLLoader...");
+                    window.MTLLoader = (await loadModule('./TMChess3D/libs/MTLLoader.js', 'MTLLoader')).MTLLoader;
                 } catch (e) {
-                    console.warn("Loaders opcionales no disponibles:", e);
+                    console.warn("MTLLoader opcional no disponible:", e);
+                }
+
+                try {
+                    updateLoadingText("Cargando OBJLoader...");
+                    window.OBJLoader = (await loadModule('./TMChess3D/libs/OBJLoader.js', 'OBJLoader')).OBJLoader;
+                } catch (e) {
+                    console.warn("OBJLoader opcional no disponible:", e);
                 }
 
                 // Finalmente cargar la escena principal
-                const SceneModule = await loadModule('./TMChess3D/Scene.js');
+                updateLoadingText("Cargando Scene...");
+                const SceneModule = await loadModule('./TMChess3D/Scene.js', 'Scene');
+                loadStatus.scene = true;
 
                 // Inicializar la escena después de cargar todo
                 initializeScene(SceneModule);
@@ -279,14 +401,24 @@
                 console.error('Error crítico al cargar el juego:', error);
                 document.getElementById('loading').style.display = 'none';
                 document.getElementById('error').style.display = 'block';
-                const errorElement = document.getElementById('error');
-                errorElement.innerHTML += '<br>Error: ' + error.message;
+
+                const errorDetails = document.getElementById('error-details');
+                if (errorDetails) {
+                    errorDetails.innerHTML = `
+                        <strong>Detalles del error:</strong><br>
+                        ${error.message}<br><br>
+                        <strong>Estado de carga:</strong><br>
+                        <pre>${JSON.stringify(loadStatus, null, 2)}</pre>
+                    `;
+                }
             }
         }
 
         // Función para inicializar la escena
         function initializeScene(SceneModule) {
             try {
+                updateLoadingText("Inicializando escena...");
+
                 // Crear la escena usando el canvas existente
                 const scene = new SceneModule.MyScene("#chessCanvas");
 
@@ -300,9 +432,11 @@
                 scene.update();
 
                 console.log('Escena inicializada correctamente');
+                updateLoadingText("Escena inicializada correctamente");
+
             } catch (error) {
                 console.error('Error al inicializar la escena:', error);
-                throw error;
+                throw new Error(`Error al inicializar la escena: ${error.message}`);
             }
         }
 
@@ -324,7 +458,14 @@
         function retryLoad() {
             document.getElementById('error').style.display = 'none';
             document.getElementById('loading').style.display = 'flex';
+            document.getElementById('loading-details').textContent = '';
             location.reload();
+        }
+
+        function toggleDebug() {
+            const debugPanel = document.getElementById('debug-panel');
+            debugPanel.style.display = debugPanel.style.display === 'block' ? 'none' : 'block';
+            updateDebugInfo();
         }
 
         // Verificar compatibilidad con WebGL
@@ -354,23 +495,15 @@
                     '<p>Por favor, actualiza tu navegador o usa uno más moderno como Chrome, Firefox o Edge.</p>';
                 return;
             }
-        }
 
-        // Script de diagnóstico
-        setTimeout(() => {
-            // Solo mostrar si hay problemas
-            if (typeof THREE === 'undefined' || typeof TWEEN === 'undefined') {
-                const debugInfo = document.createElement('div');
-                debugInfo.style.cssText = 'position: fixed; top: 10px; right: 10px; background: rgba(0,0,0,0.8); color: white; padding: 10px; z-index: 1000; font-size: 12px;';
-                debugInfo.innerHTML = `
-                    <div>WebGL: ${webglAvailable() ? '✅' : '❌'}</div>
-                    <div>Canvas: ${document.getElementById('chessCanvas') ? '✅' : '❌'}</div>
-                    <div>THREE: ${typeof THREE !== 'undefined' ? '✅' : '❌'}</div>
-                    <div>TWEEN: ${typeof TWEEN !== 'undefined' ? '✅' : '❌'}</div>
-                `;
-                document.body.appendChild(debugInfo);
-            }
-        }, 3000);
+            // Mostrar panel de debug después de 3 segundos si hay problemas
+            setTimeout(() => {
+                if (!loadStatus.three || !loadStatus.tween) {
+                    document.getElementById('debug-panel').style.display = 'block';
+                    updateDebugInfo();
+                }
+            }, 3000);
+        }
     </script>
 </body>
 </html>
