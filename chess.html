@@ -269,7 +269,10 @@
                 }
 
                 // Finalmente cargar la escena principal
-                await loadModule('./TMChess3D/Scene.js');
+                const SceneModule = await loadModule('./TMChess3D/Scene.js');
+
+                // Inicializar la escena después de cargar todo
+                initializeScene(SceneModule);
 
                 console.log('Todos los módulos cargados correctamente');
                 document.getElementById('loading').style.display = 'none';
@@ -280,6 +283,21 @@
                 document.getElementById('error').style.display = 'block';
                 document.getElementById('error').innerHTML += '<br>Error: ' + error.message;
             }
+        }
+
+        // Función para inicializar la escena
+        function initializeScene(SceneModule) {
+            // Crear la escena usando el canvas existente
+            const scene = new SceneModule.MyScene("#chessCanvas");
+
+            // Configurar event listeners
+            window.addEventListener("resize", () => scene.onWindowResize());
+            window.addEventListener("click", () => scene.onClick());
+            window.addEventListener("mousemove", (event) => scene.onMouseMove(event));
+            window.addEventListener("keydown", (event) => scene.onKeyDown(event));
+
+            // Iniciar el bucle de renderizado
+            scene.update();
         }
 
         // Iniciar la carga
