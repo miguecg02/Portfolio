@@ -68,15 +68,6 @@ const proyectos = [
     fecha: "08/02/2023",
     imagen: "amigo invisible.png",
     tecnologias: ["Angular", "Ionic", "Typescript"],
-  },
-  {
-    titulo: "Ta-Te-Ti",
-    descripcion:
-      "Proyecto sencillo de un juego de Ta-te-ti, en donde vemos lo básico de algoritmos y generamos uno para detectar si algún jugador ganó la partida.",
-    link: "https://miguecg02.github.io/Ta-te-ti/",
-    fecha: "08/02/2023",
-    imagen: "9.png",
-    tecnologias: ["HTML", "CSS", "Javascript"],
   }
 ];
 

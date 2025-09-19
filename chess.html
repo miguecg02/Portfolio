@@ -4,14 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TMChess3D - Ajedrez 3D</title>
-    <script type="importmap">
-    {
-        "imports": {
-            "three": "./TMChess3D/libs/three.module.js",
-            "tween": "./TMChess3D/libs/tween.module.js"
-        }
-    }
-    </script>
     <style>
         * {
             margin: 0;
@@ -229,7 +221,10 @@
         </div>
     </div>
 
-    <!-- Cargar los componentes del juego con manejo de errores mejorado -->
+    <!-- Cargar Three.js y TWEEN directamente -->
+    <script src="./TMChess3D/libs/three.module.js"></script>
+    <script src="./TMChess3D/libs/tween.module.js"></script>
+
     <script type="module">
         // Función para cargar módulos con reintentos
         async function loadModule(modulePath, maxRetries = 3) {
@@ -240,7 +235,6 @@
                 } catch (error) {
                     console.warn(`Intento ${i+1} fallido para ${modulePath}:`, error);
                     if (i === maxRetries - 1) throw error;
-                    // Esperar antes de reintentar
                     await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
                 }
             }
@@ -249,8 +243,13 @@
         // Intentar cargar los módulos principales
         async function loadChessGame() {
             try {
-                // Cargar Three.js primero
-                window.THREE = await loadModule('./TMChess3D/libs/three.module.js');
+                // Verificar que THREE y TWEEN estén disponibles
+                console.log('THREE disponible:', typeof THREE !== 'undefined');
+                console.log('TWEEN disponible:', typeof TWEEN !== 'undefined');
+
+                if (typeof THREE === 'undefined' || typeof TWEEN === 'undefined') {
+                    throw new Error('Three.js o Tween.js no se cargaron correctamente');
+                }
 
                 // Cargar los demás módulos
                 window.ChessGame = (await loadModule('./TMChess3D/our_libs/chess/game_handler.js')).ChessGame;
@@ -258,7 +257,6 @@
                 window.Pieces = await loadModule('./TMChess3D/Objects/Pieces/AllPieces.js');
                 window.AbstractPiece = (await loadModule('./TMChess3D/Objects/Pieces/AbstractPiece.js')).AbstractPiece;
                 window.PiceMaterialSets = await loadModule('./TMChess3D/Objects/Pieces/Materials/MaterialSetLibrary.js');
-                window.TWEEN = await loadModule('./TMChess3D/libs/tween.module.js');
 
                 // Intentar cargar loaders opcionales
                 try {
@@ -281,27 +279,45 @@
                 console.error('Error crítico al cargar el juego:', error);
                 document.getElementById('loading').style.display = 'none';
                 document.getElementById('error').style.display = 'block';
-                document.getElementById('error').innerHTML += '<br>Error: ' + error.message;
+                const errorElement = document.getElementById('error');
+                errorElement.innerHTML += '<br>Error: ' + error.message;
             }
         }
 
         // Función para inicializar la escena
         function initializeScene(SceneModule) {
-            // Crear la escena usando el canvas existente
-            const scene = new SceneModule.MyScene("#chessCanvas");
+            try {
+                // Crear la escena usando el canvas existente
+                const scene = new SceneModule.MyScene("#chessCanvas");
 
-            // Configurar event listeners
-            window.addEventListener("resize", () => scene.onWindowResize());
-            window.addEventListener("click", () => scene.onClick());
-            window.addEventListener("mousemove", (event) => scene.onMouseMove(event));
-            window.addEventListener("keydown", (event) => scene.onKeyDown(event));
+                // Configurar event listeners
+                window.addEventListener("resize", () => scene.onWindowResize());
+                window.addEventListener("click", () => scene.onClick());
+                window.addEventListener("mousemove", (event) => scene.onMouseMove(event));
+                window.addEventListener("keydown", (event) => scene.onKeyDown(event));
 
-            // Iniciar el bucle de renderizado
-            scene.update();
+                // Iniciar el bucle de renderizado
+                scene.update();
+
+                console.log('Escena inicializada correctamente');
+            } catch (error) {
+                console.error('Error al inicializar la escena:', error);
+                throw error;
+            }
+        }
+
+        // Iniciar la carga cuando Three.js y TWEEN estén listos
+        function startLoading() {
+            if (typeof THREE !== 'undefined' && typeof TWEEN !== 'undefined') {
+                loadChessGame();
+            } else {
+                // Reintentar después de un breve retraso
+                setTimeout(startLoading, 100);
+            }
         }
 
         // Iniciar la carga
-        loadChessGame();
+        startLoading();
     </script>
 
     <script>
@@ -342,15 +358,18 @@
 
         // Script de diagnóstico
         setTimeout(() => {
-            const debugInfo = document.createElement('div');
-            debugInfo.style.cssText = 'position: fixed; top: 10px; right: 10px; background: rgba(0,0,0,0.8); color: white; padding: 10px; z-index: 1000; font-size: 12px;';
-            debugInfo.innerHTML = `
-                <div>WebGL: ${webglAvailable() ? '✅' : '❌'}</div>
-                <div>Canvas: ${document.getElementById('chessCanvas') ? '✅' : '❌'}</div>
-                <div>THREE: ${typeof THREE !== 'undefined' ? '✅' : '❌'}</div>
-                <div>TWEEN: ${typeof TWEEN !== 'undefined' ? '✅' : '❌'}</div>
-            `;
-            document.body.appendChild(debugInfo);
+            // Solo mostrar si hay problemas
+            if (typeof THREE === 'undefined' || typeof TWEEN === 'undefined') {
+                const debugInfo = document.createElement('div');
+                debugInfo.style.cssText = 'position: fixed; top: 10px; right: 10px; background: rgba(0,0,0,0.8); color: white; padding: 10px; z-index: 1000; font-size: 12px;';
+                debugInfo.innerHTML = `
+                    <div>WebGL: ${webglAvailable() ? '✅' : '❌'}</div>
+                    <div>Canvas: ${document.getElementById('chessCanvas') ? '✅' : '❌'}</div>
+                    <div>THREE: ${typeof THREE !== 'undefined' ? '✅' : '❌'}</div>
+                    <div>TWEEN: ${typeof TWEEN !== 'undefined' ? '✅' : '❌'}</div>
+                `;
+                document.body.appendChild(debugInfo);
+            }
         }, 3000);
     </script>
 </body>
