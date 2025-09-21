@@ -34,13 +34,13 @@ const proyectos = [
     imagen: "5.png",
     tecnologias: ["HTML","CSS","Javascript","APIs"],
   },
-  {
+ {
   titulo: "Agenda de contactos",
   descripcion: "Agenda de contactos ejemplo. Versión 2025. Proyecto generado con Angular CLI version 19.0.0 y actualizado a Angular 20.2.",
-  link: "https://miguecg02.github.io/Agenda-contactos/", // ← CAMBIA ESTO
+  link: "https://github.com/miguecg02/Agenda-contactos/tree/gh-pages/src", // Enlace directo a los archivos
   fecha: "29/02/2023",
   imagen: "8.png",
-  tecnologias: ["Angular","SCSS","Typecript", "HTMl" ,"APIs"],
+  tecnologias: ["Angular","SCSS","Typecript", "HTML" ,"APIs"],
 },
   {
   titulo: "Contador de truco",
