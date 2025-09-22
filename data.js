@@ -66,8 +66,17 @@ const proyectos = [
       "Herramienta que nos permite gestionar varios sorteos de amigos invisibles (una actividad en donde se hacen regalos entre grupos de amigos). Está creada pensada en su eso en teléfonos.",
     link: "https://amigo-inivisible.netlify.app/",
     fecha: "08/02/2023",
-    imagen: "amigo invisible.png",
+    imagen: "invisible.png",
     tecnologias: ["Angular", "Ionic", "Typescript"],
+  },
+  {
+    titulo: "Glosario'",
+    descripcion:
+      "Herramienta que nos permite gestionar varios sorteos de amigos invisibles (una actividad en donde se hacen regalos entre grupos de amigos). Está creada pensada en su eso en teléfonos.",
+    link: "https://miguecg02.github.io/Glosario",
+    fecha: "08/02/2023",
+    imagen: "10.png",
+    tecnologias: ["CSS", "HTML", "Javascript"],
   }
 ];
 
