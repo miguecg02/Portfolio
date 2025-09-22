@@ -70,14 +70,16 @@ const proyectos = [
     tecnologias: ["Angular", "Ionic", "Typescript"],
   },
   {
-    titulo: "Glosario'",
+    titulo: "Programa de realidad aumentada'",
     descripcion:
-      "Herramienta que nos permite gestionar varios sorteos de amigos invisibles (una actividad en donde se hacen regalos entre grupos de amigos). Está creada pensada en su eso en teléfonos.",
-    link: "https://miguecg02.github.io/Glosario",
+      "Este program nos permite mediante códigos Aruco ver modelos 3D en realidad aumentada Dentro del repositorio estará toda la documentación del proyecto.",
+    link: "https://github.com/miguecg02/CUIA",
     fecha: "08/02/2023",
-    imagen: "10.png",
+    imagen: "11.png",
     tecnologias: ["CSS", "HTML", "Javascript"],
   }
+
+  
 ];
 
 const informacionPersonal = {
