@@ -1,12 +1,5 @@
 const proyectos = [
-   {
-  titulo: "Ajedrez 3D con Three.js - TMChess3D",
-  descripcion: "Implementación interactiva de un juego de ajedrez en 3D utilizando Three.js, con movimientos válidos, animaciones, rotación de cámara y selección de piezas.",
-  link: "https://4de7a54fac0b.ngrok-free.app/chess.html",
-  fecha: "01/12/2023",
-  imagen: "3.png",
-  tecnologias: ["Three.js", "JavaScript", "WebGL", "HTML5", "CSS3", "3D Modeling", "Animación 3D"]
-},
+  
   {
     titulo: "Pong",
     descripcion:
@@ -77,7 +70,15 @@ const proyectos = [
     fecha: "08/02/2023",
     imagen: "11.png",
     tecnologias: ["CSS", "HTML", "Javascript"],
-  }
+  },
+    {
+  titulo: "Ajedrez 3D con Three.js - TMChess3D",
+  descripcion: "Implementación interactiva de un juego de ajedrez en 3D utilizando Three.js, con movimientos válidos, animaciones, rotación de cámara y selección de piezas.",
+  link: "https://4de7a54fac0b.ngrok-free.app/chess.html",
+  fecha: "01/12/2023",
+  imagen: "3.png",
+  tecnologias: ["Three.js", "JavaScript", "WebGL", "HTML5", "CSS3", "3D Modeling", "Animación 3D"]
+},
 
   
 ];
